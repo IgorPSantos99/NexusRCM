@@ -1,0 +1,24 @@
+<type>(<scope>): <description>
+
+# Allowed types:
+# feat     -> new feature
+# fix      -> bug fix
+# test     -> adding or updating tests
+# refactor -> code refactoring without changing behavior
+# docs     -> documentation changes
+# ci       -> continuous integration and automation
+# chore    -> general maintenance tasks
+
+# Allowed scopes:
+# ingestion | nlp | graph | retrieval | agent | api | data | deps
+
+# Rules:
+# - use lowercase for type and scope
+# - description should be imperative and concise
+# - do not end description with a period
+# - keep header at 72 characters or less
+
+# Examples:
+# chore: initialize project structure and gitignore
+# feat(ingestion): add PDF loader
+# test(ingestion): add PDF loader edge case tests
