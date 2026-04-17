@@ -35,6 +35,8 @@ pip-wheel-metadata/
 # Environment files
 .env
 .env.*
+*.key, 
+*.pem
 !.env.example
 
 # Node.js dependencies and caches

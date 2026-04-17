@@ -6,16 +6,16 @@
 # test     -> adding or updating tests
 # refactor -> code refactoring without changing behavior
 # docs     -> documentation changes
-# build    -> builds changes
-# perf     -> performance optimzations
+# build    -> build system or packaging changes
+# perf     -> performance optimizations
 # style    -> code formatter, semicolons, spaces, etc
-# remove   -> removal old archives folders or features
-# cleanup  -> improve code maintenability
+# remove   -> remove obsolete files, folders, or features
+# cleanup  -> improve code maintainability
 # ci       -> continuous integration and automation
 # chore    -> general maintenance tasks
 
 # Allowed scopes:
-# ingestion | nlp | graph | retrieval | agent | api | data | deps
+# ingestion | nlp | graph | retrieval | agent | api | data | deps | module | adr | readme
 
 # Rules:
 # - use lowercase for type and scope
