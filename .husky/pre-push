@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+set -e
+
+PYTHON_BIN=".venv/Scripts/python.exe"
+
+if [ ! -x "$PYTHON_BIN" ]; then
+  echo "Missing project virtual environment at $PYTHON_BIN"
+  echo "Create it first and install dev dependencies before pushing."
+  exit 1
+fi
+
+echo "Running pytest..."
+"$PYTHON_BIN" -m pytest
