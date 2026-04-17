@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.py,cover
+
+# Python tooling
+.python-version
 
 # Virtual environments
 .venv/
@@ -14,6 +18,9 @@ ENV/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.hypothesis/
+.tox/
+.nox/
 .coverage
 .coverage.*
 htmlcov/
@@ -22,17 +29,31 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+.eggs/
+pip-wheel-metadata/
 
 # Environment files
 .env
 .env.*
 !.env.example
 
+# Node.js dependencies and caches
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.npm/
+.pnpm-store/
+
 # IDE and OS files
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # Project runtime data
 models/*
@@ -44,3 +65,11 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 
+data/synthetic/*
+!data/synthetic/.gitkeep
+!data/synthetic/*.py
+
+# Logs and temporary files
+*.log
+tmp/
+temp/

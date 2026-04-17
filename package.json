@@ -1,0 +1,15 @@
+{
+  "name": "nexusrcm-commit-tooling",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Auxiliary Node.js tooling for commit automation and validation.",
+  "scripts": {
+    "prepare": "husky",
+    "commitlint": "commitlint --edit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
+    "husky": "^9.1.7"
+  }
+}
