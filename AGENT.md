@@ -7,7 +7,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  CURRENT PHASE:  1 — Data Ingestion & NLP Extraction (Weeks 1–4)      │
-│  STATUS:         🔴 Not Started                                        │
+│  STATUS:         🟡 In Progress                                       │
 │  FOCUS:          Project scaffolding, PDF/CSV loaders, NLP pipeline    │
 │  BLOCKED BY:     Nothing — ready to begin                              │
 │  NEXT MILESTONE: v0.1.0 — Ingestion pipeline with passing tests       │
@@ -77,9 +77,81 @@ don't just write code, you **teach the reasoning** behind every decision.
 
 ---
 
-## 2. Coding Standards & Rules
+## 2. Behavioral Guidelines & Engineering Discipline
 
-### 2.1 Python Style
+> These guidelines reduce common LLM coding mistakes. They bias toward
+> caution over speed. For trivial tasks, use judgment — but when in doubt,
+> follow the rules.
+
+### 2.1 Think Before Coding
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them — don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
+
+### 2.2 Simplicity First
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+### 2.3 Surgical Changes
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it — don't delete it.
+
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
+
+The test: Every changed line should trace directly to the user's request.
+
+### 2.4 Goal-Driven Execution
+
+**Define success criteria. Loop until verified.**
+
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
+
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+Strong success criteria let you loop independently. Weak criteria ("make it
+work") require constant clarification.
+
+### 2.5 Behavioral Success Indicators
+
+These guidelines are working if:
+- Fewer unnecessary changes appear in diffs.
+- Fewer rewrites happen due to overcomplication.
+- Clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## 3. Coding Standards & Rules
+
+### 3.1 Python Style
 
 | Rule | Standard | Enforcement |
 |---|---|---|
@@ -90,7 +162,7 @@ don't just write code, you **teach the reasoning** behind every decision.
 | Max line length | 88 characters (ruff default) | Enforced by formatter |
 | Import order | `ruff` isort rules (stdlib → third-party → local) | Enforced by linter |
 
-### 2.2 Naming Conventions
+### 3.2 Naming Conventions
 
 ```
 Classes:          PascalCase          → PDFLoader, GraphStore, DiagnosticAgent
@@ -102,7 +174,7 @@ Test files:       test_ prefix        → test_ingestion.py, test_graph.py
 Test functions:   test_ prefix        → test_pdf_loader_handles_empty_file
 ```
 
-### 2.3 Commit Discipline
+### 3.3 Commit Discipline
 
 Follow **Conventional Commits** strictly:
 
@@ -125,7 +197,7 @@ Scope: ingestion | nlp | graph | retrieval | agent | api | data | deps
 - `v0.2.0` → Graph + hybrid search complete (end of Phase 2)
 - `v1.0.0` → Full stack deployed (end of Phase 3)
 
-### 2.4 Git Branch Strategy
+### 3.4 Git Branch Strategy
 
 ```
 main          Production-ready, tagged releases only
@@ -141,7 +213,7 @@ main          Production-ready, tagged releases only
 - `develop` merges into `main` via PR at phase milestones.
 - Delete branches after merge.
 
-### 2.5 File & Module Rules
+### 3.5 File & Module Rules
 
 - **No hardcoded paths, API keys, or magic numbers.** Use Pydantic Settings.
 - **No `print()` for logging.** Use Python `logging` module with structured
@@ -152,7 +224,7 @@ main          Production-ready, tagged releases only
 - **Every module has `__init__.py`** that exports its public interface.
 - **Configuration lives in `src/config.py`** using `pydantic-settings`.
 
-### 2.6 Documentation Rules
+### 3.6 Documentation Rules
 
 - Every public function/class has a Google-style docstring.
 - Every module has a module-level docstring explaining its purpose.
@@ -161,9 +233,9 @@ main          Production-ready, tagged releases only
 
 ---
 
-## 3. Framework-Specific Instructions
+## 4. Framework-Specific Instructions
 
-### 3.1 PyMuPDF / Docling (Document Ingestion)
+### 4.1 PyMuPDF / Docling (Document Ingestion)
 
 ```python
 # Always wrap PDF operations in try/except for corrupted files
@@ -191,7 +263,7 @@ def load_pdf(path: Path) -> list[DocumentChunk]:
   Make chunk size configurable via Settings.
 - Always preserve `source_ref` metadata: `{filename, page, chunk_index}`.
 
-### 3.2 HuggingFace Transformers (NLP)
+### 4.2 HuggingFace Transformers (NLP)
 
 ```python
 # Always pin model versions in config
@@ -211,7 +283,7 @@ DEFAULT_ZEROSHOT_MODEL = "facebook/bart-large-mnli"
   samples. If accuracy < 70%, escalate (try SpaCy, different model, or
   consider few-shot prompting with an LLM).
 
-### 3.3 NetworkX → Neo4j (Graph)
+### 4.3 NetworkX → Neo4j (Graph)
 
 ```python
 # Phase 1: NetworkX (in-memory, rapid prototyping)
@@ -235,7 +307,7 @@ class GraphStore(Protocol):
 - Need for Cypher query language or Graph Data Science algorithms
 - Multi-user concurrent access required
 
-### 3.4 ChromaDB → Qdrant (Vector Store)
+### 4.4 ChromaDB → Qdrant (Vector Store)
 
 ```python
 # Phase 1: ChromaDB (zero-config, local, good for prototyping)
@@ -254,7 +326,7 @@ class BaseVectorStore(Protocol):
 - Benchmark at 10k, 50k, 100k documents. If query latency > 500ms,
   trigger Qdrant migration (ADR-005).
 
-### 3.5 LlamaIndex (GraphRAG Orchestration)
+### 4.5 LlamaIndex (GraphRAG Orchestration)
 
 ```python
 # Use LlamaIndex for:
@@ -273,7 +345,7 @@ class BaseVectorStore(Protocol):
 - Query router decides: semantic-only, structural-only, or hybrid based
   on query classification.
 
-### 3.6 FastAPI (API Layer)
+### 4.6 FastAPI (API Layer)
 
 ```python
 # Every endpoint has:
@@ -294,7 +366,7 @@ from pydantic import BaseModel, Field
 - Use `slowapi` for rate limiting.
 - Use `httpx.AsyncClient` in tests, never `requests`.
 
-### 3.7 Docker & Docker Compose
+### 4.7 Docker & Docker Compose
 
 ```yaml
 # docker-compose.yml spins up:
@@ -313,7 +385,7 @@ from pydantic import BaseModel, Field
 - Pin base image versions (e.g., `python:3.12-slim`, not `python:latest`).
 - Neo4j is optional: use Docker Compose profiles (`--profile production`).
 
-### 3.8 Pytest (Testing)
+### 4.8 Pytest (Testing)
 
 ```python
 # Test file naming: test_<module>.py
@@ -344,7 +416,7 @@ def test_entity_extractor(input_text, expected):
 
 ---
 
-## 4. Current State & Focus
+## 5. Current State & Focus
 
 ### Phase 1 — Data Ingestion & NLP Extraction (Weeks 1–4)
 
@@ -355,7 +427,7 @@ downstream (graph, retrieval, agent) depends on this layer being solid.
 
 | Task | Status | Deliverable |
 |---|---|---|
-| Initialize project structure (pyproject.toml, src/, tests/) | 🔴 TODO | Scaffolded repo |
+| Initialize project structure (pyproject.toml, src/, tests/) | 🟢 | Scaffolded repo |
 | Define BaseLoader ABC in src/interfaces.py | 🔴 TODO | Interface contract |
 | Implement PDFLoader with PyMuPDF | 🔴 TODO | src/ingestion/pdf_loader.py |
 | Implement CSVLoader for SAP PM format | 🔴 TODO | src/ingestion/csv_loader.py |
@@ -388,7 +460,7 @@ downstream (graph, retrieval, agent) depends on this layer being solid.
 
 ---
 
-## 5. Project Summary & Core Capabilities
+## 6. Project Summary & Core Capabilities
 
 ### What NexusRCM Does
 
@@ -430,7 +502,7 @@ responses traceable to source documents.
 
 ---
 
-## 6. Domain Ontology & Query Schema
+## 7. Domain Ontology & Query Schema
 
 ### Knowledge Graph Ontology
 
@@ -499,7 +571,7 @@ explainability, `confidence` enables trust calibration.
 
 ---
 
-## 7. System Architecture & Tech Stack
+## 8. System Architecture & Tech Stack
 
 ### Architecture Diagram
 
@@ -592,7 +664,7 @@ explainability, `confidence` enables trust calibration.
 
 ---
 
-## 8. Repository Structure
+## 9. Repository Structure
 
 ```
 NexusRCM/
@@ -691,7 +763,7 @@ NexusRCM/
 
 ---
 
-## 9. Development Roadmap
+## 10. Development Roadmap
 
 ### Overview
 
@@ -830,7 +902,7 @@ clean API and Docker deployment.
 
 ---
 
-## 10. Security Checklist
+## 11. Security Checklist
 
 > This section exists because security awareness is a hiring signal,
 > even in portfolio projects.
@@ -852,7 +924,7 @@ clean API and Docker deployment.
 
 ---
 
-## 11. ADR Quick-Reference
+## 12. ADR Quick-Reference
 
 | ADR | Decision | Write When |
 |---|---|---|
@@ -886,7 +958,7 @@ What else was evaluated? Why was it rejected?
 
 ---
 
-## 12. Future Extensions Registry
+## 13. Future Extensions Registry
 
 > These are OUT OF SCOPE for the 12-week plan. Document them as GitHub
 > Issues with the `enhancement` and `future` labels. They exist here to
@@ -907,7 +979,7 @@ What else was evaluated? Why was it rejected?
 
 ---
 
-## 13. How to Use This Agent File
+## 14. How to Use This Agent File
 
 ### For AI Assistants
 
@@ -917,9 +989,10 @@ file as context for the NexusRCM project:
 1. **Read the Phase Tracker first.** It tells you what phase the project
    is in and what the current focus is. Do not suggest work from future phases.
 
-2. **Follow the Coding Standards.** All code you generate must comply with
-   Section 2. Use ruff-compatible formatting, Google-style docstrings,
-   Conventional Commits, and snake_case naming.
+2. **Follow the Coding Standards (Section 3) AND the Behavioral Guidelines
+   (Section 2).** All code you generate must comply with both. Use
+   ruff-compatible formatting, Google-style docstrings, Conventional Commits,
+   and snake_case naming. Apply simplicity-first thinking and surgical changes.
 
 3. **Always include tests.** When generating a new feature, write the test
    first. This is non-negotiable.
@@ -933,6 +1006,12 @@ file as context for the NexusRCM project:
 
 6. **Suggest ADRs.** When a design decision is made, offer to draft the
    corresponding ADR.
+
+7. **Think before coding (Section 2.1).** State assumptions. Surface
+   tradeoffs. If uncertain, ask before implementing.
+
+8. **Be surgical (Section 2.3).** Touch only what the request requires.
+   Don't "improve" adjacent code. Match existing style.
 
 ### For the Developer (Igor)
 
