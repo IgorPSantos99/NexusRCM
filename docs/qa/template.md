@@ -11,6 +11,7 @@
 
 Descreva com suas palavras o que você acha que esse commit fez.
 
+- **Compreensão do commit (Resposta IA)**:
 ---
 
 ## ❓ Perguntas
@@ -46,14 +47,14 @@ Descreva com suas palavras o que você acha que esse commit fez.
 <!-- Feedback da IA -->
 
 ### 1.
-- Correção:
-- Pontos corretos:
-- Pontos a melhorar:
+- **Correção**:
+- **Pontos corretos**:
+- **Pontos a melhorar**:
 
 ### 2.
-- Correção:
-- Pontos corretos:
-- Pontos a melhorar:
+- **Correção**:
+- **Pontos corretos**:
+- **Pontos a melhorar**:
 
 ---
 
@@ -61,9 +62,9 @@ Descreva com suas palavras o que você acha que esse commit fez.
 
 Liste aqui o que você NÃO soube responder bem.
 
-- 
-- 
-- 
+- **D1**:
+- **D2**:
+- **D3**:
 
 ---
 
@@ -85,6 +86,10 @@ Explique o que você aprendeu após a correção.
 Como isso se conecta com o resto do projeto?
 
 ---
+
+## Vocabulário Técnico
+
+Adicione aqui os novos termos e os explique com suas palavras
 
 ## 🎯 Próximos Passos
 
