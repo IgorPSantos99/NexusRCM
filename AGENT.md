@@ -6,11 +6,11 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│  CURRENT PHASE:  1 — Data Ingestion & NLP Extraction (Weeks 1–4)      │
-│  STATUS:         🔴 Not Started                                        │
-│  FOCUS:          Project scaffolding, PDF/CSV loaders, NLP pipeline    │
-│  BLOCKED BY:     Nothing — ready to begin                              │
-│  NEXT MILESTONE: v0.1.0 — Ingestion pipeline with passing tests       │
+│  CURRENT PHASE:  1 — Data Ingestion & NLP Extraction (Weeks 1–4)        │
+│  STATUS:         🟡 In Progress                                        │
+│  FOCUS:          Project scaffolding, PDF/CSV loaders, NLP pipeline     │
+│  BLOCKED BY:     Nothing — ready to begin                               │
+│  NEXT MILESTONE: v0.1.0 — Ingestion pipeline with passing tests         │
 └─────────────────────────────────────────────────────────────────────────┘
 
 Phase Progress:
@@ -355,8 +355,8 @@ downstream (graph, retrieval, agent) depends on this layer being solid.
 
 | Task | Status | Deliverable |
 |---|---|---|
-| Initialize project structure (pyproject.toml, src/, tests/) | 🔴 TODO | Scaffolded repo |
-| Define BaseLoader ABC in src/interfaces.py | 🔴 TODO | Interface contract |
+| Initialize project structure (pyproject.toml, src/, tests/) | 🟢 Done | Scaffolded repo |
+| Define BaseLoader ABC in src/interfaces.py | 🟢 Done | Interface contract |
 | Implement PDFLoader with PyMuPDF | 🔴 TODO | src/ingestion/pdf_loader.py |
 | Implement CSVLoader for SAP PM format | 🔴 TODO | src/ingestion/csv_loader.py |
 | Write unit tests for all loaders | 🔴 TODO | tests/test_ingestion.py |
