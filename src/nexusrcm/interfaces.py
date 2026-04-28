@@ -18,6 +18,7 @@ class SourceRef(TypedDict):
     page: int | None
     chunk_index: int | None
 
+
 class DocumentChunk(TypedDict):
     """Normalized text unit produced by ingestion."""
 
@@ -25,6 +26,7 @@ class DocumentChunk(TypedDict):
     text: str
     source_ref: SourceRef
     metadata: dict[str, Any]
+
 
 class ExtractionResult(TypedDict):
     """Structured failure knowledge extracted from a document chunk."""
@@ -83,7 +85,7 @@ class BaseLoader(Protocol):
 
     def load(self, source: Path) -> list[DocumentChunk]:
         """Load a source file into normalized document chunks."""
-
+        ...
 
 @runtime_checkable
 class BaseExtractor(Protocol):
@@ -91,7 +93,7 @@ class BaseExtractor(Protocol):
 
     def extract(self, chunk: DocumentChunk) -> ExtractionResult:
         """Extract structured failure knowledge from a document chunk."""
-
+        ...
 
 @runtime_checkable
 class GraphStore(Protocol):
@@ -104,6 +106,7 @@ class GraphStore(Protocol):
         attributes: dict[str, Any],
     ) -> None:
         """Insert or update a graph node."""
+        ...
 
     def add_edge(
         self,
@@ -113,6 +116,7 @@ class GraphStore(Protocol):
         attributes: dict[str, Any],
     ) -> None:
         """Insert or update a graph edge."""
+        ...
 
     def get_neighbors(
         self,
@@ -120,6 +124,7 @@ class GraphStore(Protocol):
         relationship_type: str | None = None,
     ) -> list[GraphNode]:
         """Return neighboring nodes for a given node."""
+        ...
 
     def query_path(
         self,
@@ -128,7 +133,7 @@ class GraphStore(Protocol):
         max_depth: int = 3,
     ) -> list[list[str]]:
         """Return matching graph paths between two nodes."""
-
+        ...
 
 @runtime_checkable
 class BaseRetriever(Protocol):
@@ -136,7 +141,7 @@ class BaseRetriever(Protocol):
 
     def retrieve(self, query: str, top_k: int = 5) -> list[RetrievalResult]:
         """Return ranked evidence relevant to the user query."""
-
+        ...
 
 @runtime_checkable
 class BaseVectorStore(Protocol):
@@ -149,6 +154,7 @@ class BaseVectorStore(Protocol):
         metadatas: list[dict[str, Any]],
     ) -> None:
         """Persist embeddings and their metadata."""
+        ...
 
     def query(
         self,
@@ -157,10 +163,11 @@ class BaseVectorStore(Protocol):
         filters: dict[str, Any] | None = None,
     ) -> list[RetrievalResult]:
         """Search similar vectors using an embedding query."""
+        ...
 
     def delete(self, ids: list[str]) -> None:
         """Delete embeddings by identifier."""
-
+        ...
 
 @runtime_checkable
 class DiagnosticAgent(Protocol):
@@ -168,7 +175,7 @@ class DiagnosticAgent(Protocol):
 
     def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse:
         """Generate an auditable diagnostic response for a user question."""
-
+        ...
 
 __all__ = [
     "BaseExtractor",

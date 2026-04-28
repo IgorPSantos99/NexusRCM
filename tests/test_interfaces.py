@@ -10,6 +10,7 @@ from nexusrcm.interfaces import (
     BaseRetriever,
     BaseVectorStore,
     DiagnosticAgent,
+    DiagnosticResponse,
     DocumentChunk,
     ExtractionResult,
     GraphNode,
@@ -149,7 +150,7 @@ class DummyVectorStore:
 class DummyDiagnosticAgent:
     """Minimal agent implementation for protocol validation."""
 
-    def answer(self, question: str, top_k: int = 5) -> dict[str, object]:
+    def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse:
         return {
             "failure_modes_identified": ["bearing wear"],
             "most_probable_root_cause": question,
