@@ -5,10 +5,8 @@ system. Concrete implementations may change over time, but downstream code
 should depend only on these contracts.
 """
 
-# QUESTION: Why we use __future__ imports in this module?
 from __future__ import annotations
 
-# QUESTION: How is the importance of every import below?
 from pathlib import Path
 from typing import Any, Protocol, TypedDict, runtime_checkable
 
@@ -19,7 +17,6 @@ class SourceRef(TypedDict):
     filename: str
     page: int | None
     chunk_index: int | None
-# QUESTION: What is "chunk_index" used for in SourceRef?
 
 class DocumentChunk(TypedDict):
     """Normalized text unit produced by ingestion."""
@@ -28,12 +25,6 @@ class DocumentChunk(TypedDict):
     text: str
     source_ref: SourceRef
     metadata: dict[str, Any]
-"""
-QUESTION: "chunk_id" here, is the same as the "chunk_index" in SourceRef? 
-if not what is the difference between them?
-"""
-
-
 
 class ExtractionResult(TypedDict):
     """Structured failure knowledge extracted from a document chunk."""
@@ -45,12 +36,8 @@ class ExtractionResult(TypedDict):
     corrective_actions: list[str]
     source_ref: SourceRef
     metadata: dict[str, Any]
-"""
-QUESTION: for this archive is a interface package, 
-we should define only generic formats for the extractions results?
-"""
 
-# TODO: Search more to understand how this Graphs Classes are used in projects.
+
 class GraphNode(TypedDict):
     """Graph node returned by graph store implementations."""
 
