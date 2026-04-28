@@ -1,5 +1,14 @@
 <type>(<scope>): <description>
 
+# Body:
+# Explain what changed and why.
+# Keep lines around 72 characters.
+#
+# Footer:
+# Use only when needed, e.g.:
+# BREAKING CHANGE: <description>
+# Closes #<issue>
+
 # Allowed types:
 # feat     -> new feature
 # fix      -> bug fix
@@ -15,15 +24,30 @@
 # chore    -> general maintenance tasks
 
 # Allowed scopes:
-# ingestion | nlp | graph | retrieval | agent | api | data | deps | module | adr | readme
+# Allowed scopes:
+# ingestion | nlp | graph | retrieval | agent | api | data | deps
+# module | interfaces | config | schemas | docs | adr | readme | qa
+# tests | tooling | git | security | docker | ci | repo
+
 
 # Rules:
 # - use lowercase for type and scope
 # - description should be imperative and concise
 # - do not end description with a period
 # - keep header at 72 characters or less
+# - separate header and body with a blank line
+# - use the body to explain context, rationale, and trade-offs
+# - do not describe obvious file edits without explaining why
 
 # Examples:
 # chore: initialize project structure and gitignore
 # feat(ingestion): add PDF loader
 # test(ingestion): add PDF loader edge case tests
+
+# docs(qa): complete ingestion contracts review
+#
+# Finalize the QA session for the initial ingestion contract commits.
+#
+# Add answer validation, technical vocabulary, and review notes for the
+# interface contract questions.
+

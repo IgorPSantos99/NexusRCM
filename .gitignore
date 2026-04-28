@@ -56,6 +56,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+.claude
 
 # Project runtime data
 models/*
