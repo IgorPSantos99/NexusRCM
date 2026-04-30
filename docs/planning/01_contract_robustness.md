@@ -29,50 +29,50 @@ Use este arquivo como lista unica de acompanhamento para a migracao dos contrato
 
 ### `interfaces.py` - Modelos Pydantic
 
-- [ ] 3. Substituir todos os `TypedDict` por modelos `pydantic.BaseModel`.
-  - [ ] 3.1. Remover dependencias de `TypedDict` nos contratos publicos.
-  - [ ] 3.2. Garantir validacao runtime nos modelos migrados.
-  - [ ] 3.3. Preservar os nomes publicos dos tipos existentes.
+- [X] 3. Substituir todos os `TypedDict` por modelos `pydantic.BaseModel`.
+  - [X] 3.1. Remover dependencias de `TypedDict` nos contratos publicos.
+  - [X] 3.2. Garantir validacao runtime nos modelos migrados.
+  - [X] 3.3. Preservar os nomes publicos dos tipos existentes.
 
-- [ ] 4. Converter `SourceRef` para `BaseModel`.
-  - [ ] 4.1. Manter `filename: str`.
-  - [ ] 4.2. Manter `page: int | None = None`.
-  - [ ] 4.3. Manter `chunk_index: int | None = None`.
+- [X] 4. Converter `SourceRef` para `BaseModel`.
+  - [X] 4.1. Manter `filename: str`.
+  - [X] 4.2. Manter `page: int | None = None`.
+  - [X] 4.3. Manter `chunk_index: int | None = None`.
 
-- [ ] 5. Converter `DocumentChunk` para `BaseModel`.
-  - [ ] 5.1. Adicionar `default_factory=lambda: str(uuid4())` em `chunk_id`.
-  - [ ] 5.2. Adicionar `field_validator` em `text` para rejeitar string vazia ou somente whitespace.
-  - [ ] 5.3. Usar validacao equivalente a `Field(..., min_length=1)` quando fizer sentido.
+- [X] 5. Converter `DocumentChunk` para `BaseModel`.
+  - [X] 5.1. Adicionar `default_factory=lambda: str(uuid4())` em `chunk_id`.
+  - [X] 5.2. Adicionar `field_validator` em `text` para rejeitar string vazia ou somente whitespace.
+  - [X] 5.3. Usar validacao equivalente a `Field(..., min_length=1)` quando fizer sentido.
 
-- [ ] 6. Converter `ExtractionResult` para `BaseModel`.
-  - [ ] 6.1. Usar `default_factory=list` em todos os campos `list[str]`.
-  - [ ] 6.2. Garantir que resultado vazio seja valido e nao represente erro.
+- [X] 6. Converter `ExtractionResult` para `BaseModel`.
+  - [X] 6.1. Usar `default_factory=list` em todos os campos `list[str]`.
+  - [X] 6.2. Garantir que resultado vazio seja valido e nao represente erro.
 
-- [ ] 7. Converter `RetrievalResult` para `BaseModel`.
-  - [ ] 7.1. Adicionar campo `strategy: RetrievalStrategy`.
-  - [ ] 7.2. Adicionar campo `graph_path: GraphPath | None = None`.
-  - [ ] 7.3. Preencher `graph_path` somente para resultados estruturais quando aplicavel.
+- [X] 7. Converter `RetrievalResult` para `BaseModel`.
+  - [X] 7.1. Adicionar campo `strategy: RetrievalStrategy`.
+  - [X] 7.2. Adicionar campo `graph_path: GraphPath | None = None`.
+  - [X] 7.3. Preencher `graph_path` somente para resultados estruturais quando aplicavel.
 
-- [ ] 8. Converter `DiagnosticResponse` para `BaseModel`.
-  - [ ] 8.1. Adicionar `Field(ge=0.0, le=1.0)` em `confidence`.
-  - [ ] 8.2. Adicionar `field_validator` em `failure_modes_identified` para rejeitar listas vazias.
-  - [ ] 8.3. Adicionar `field_validator` em `recommended_actions` para rejeitar listas vazias.
+- [X] 8. Converter `DiagnosticResponse` para `BaseModel`.
+  - [X] 8.1. Adicionar `Field(ge=0.0, le=1.0)` em `confidence`.
+  - [X] 8.2. Adicionar `field_validator` em `failure_modes_identified` para rejeitar listas vazias.
+  - [X] 8.3. Adicionar `field_validator` em `recommended_actions` para rejeitar listas vazias.
 
-- [ ] 9. Converter `GraphNode` e `GraphEdge` para `BaseModel`.
-  - [ ] 9.1. Nao adicionar campos novos.
-  - [ ] 9.2. Manter apenas a migracao para validacao em runtime.
+- [X] 9. Converter `GraphNode` e `GraphEdge` para `BaseModel`.
+  - [X] 9.1. Nao adicionar campos novos.
+  - [X] 9.2. Manter apenas a migracao para validacao em runtime.
 
-- [ ] 10. Criar `GraphPath(BaseModel)`.
-  - [ ] 10.1. Adicionar `nodes: list[str]`.
-  - [ ] 10.2. Adicionar `edges: list[GraphEdge]`.
-  - [ ] 10.3. Adicionar `total_depth: int`.
-  - [ ] 10.4. Usar `GraphPath` para substituir `list[list[str]]` no retorno de `query_path`.
+- [X] 10. Criar `GraphPath(BaseModel)`.
+  - [X] 10.1. Adicionar `nodes: list[str]`.
+  - [X] 10.2. Adicionar `edges: list[GraphEdge]`.
+  - [X] 10.3. Adicionar `total_depth: int`.
+  - [X] 10.4. Usar `GraphPath` para substituir `list[list[str]]` no retorno de `query_path`.
 
-- [ ] 11. Criar `RetrievalStrategy(StrEnum)`.
-  - [ ] 11.1. Adicionar `SEMANTIC = "semantic"`.
-  - [ ] 11.2. Adicionar `STRUCTURAL = "structural"`.
-  - [ ] 11.3. Adicionar `HYBRID = "hybrid"`.
-  - [ ] 11.4. Usar `StrEnum` para serializacao JSON automatica.
+- [X] 11. Criar `RetrievalStrategy(StrEnum)`.
+  - [X] 11.1. Adicionar `SEMANTIC = "semantic"`.
+  - [X] 11.2. Adicionar `STRUCTURAL = "structural"`.
+  - [X] 11.3. Adicionar `HYBRID = "hybrid"`.
+  - [X] 11.4. Usar `StrEnum` para serializacao JSON automatica.
 
 ### `interfaces.py` - Protocols
 
