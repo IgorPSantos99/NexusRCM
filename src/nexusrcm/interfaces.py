@@ -7,40 +7,53 @@ should depend only on these contracts.
 
 from __future__ import annotations
 
+from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol, TypedDict, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
+from uuid import uuid4
+
+from pydantic import BaseModel, Field, field_validator
 
 
-class SourceRef(TypedDict):
+class SourceRef(BaseModel):
     """Traceable reference to the original evidence source."""
 
     filename: str
-    page: int | None
-    chunk_index: int | None
+    page: int | None = None
+    chunk_index: int | None = None
 
 
-class DocumentChunk(TypedDict):
+class DocumentChunk(BaseModel):
     """Normalized text unit produced by ingestion."""
 
-    chunk_id: str
-    text: str
+    chunk_id: str = Field(default_factory=lambda: str(uuid4()))
+    text: str = Field(min_length=1)
     source_ref: SourceRef
     metadata: dict[str, Any]
 
+    @field_validator("text")
+    @classmethod
+    def text_must_not_be_blank(cls, value: str) -> str:
+        """Reject chunks without extractable text content."""
+        if not value.strip():
+            msg = "text must not be empty or whitespace"
+            raise ValueError(msg)
+        return value
 
-class ExtractionResult(TypedDict):
+
+class ExtractionResult(BaseModel):
     """Structured failure knowledge extracted from a document chunk."""
 
-    equipment: list[str]
-    symptoms: list[str]
-    failure_modes: list[str]
-    root_causes: list[str]
-    corrective_actions: list[str]
+    equipment: list[str] = Field(default_factory=list)
+    symptoms: list[str] = Field(default_factory=list)
+    failure_modes: list[str] = Field(default_factory=list)
+    root_causes: list[str] = Field(default_factory=list)
+    corrective_actions: list[str] = Field(default_factory=list)
     source_ref: SourceRef
     metadata: dict[str, Any]
 
 
-class GraphNode(TypedDict):
+class GraphNode(BaseModel):
     """Graph node returned by graph store implementations."""
 
     node_id: str
@@ -48,7 +61,7 @@ class GraphNode(TypedDict):
     attributes: dict[str, Any]
 
 
-class GraphEdge(TypedDict):
+class GraphEdge(BaseModel):
     """Graph edge metadata returned by graph store implementations."""
 
     source: str
@@ -57,7 +70,23 @@ class GraphEdge(TypedDict):
     attributes: dict[str, Any]
 
 
-class RetrievalResult(TypedDict):
+class GraphPath(BaseModel):
+    """Structured graph path returned by graph traversal operations."""
+
+    nodes: list[str]
+    edges: list[GraphEdge]
+    total_depth: int
+
+
+class RetrievalStrategy(StrEnum):
+    """Retrieval strategy used to produce ranked evidence."""
+
+    SEMANTIC = "semantic"
+    STRUCTURAL = "structural"
+    HYBRID = "hybrid"
+
+
+class RetrievalResult(BaseModel):
     """Ranked retrieval result used by hybrid search and agent layers."""
 
     result_id: str
@@ -65,18 +94,29 @@ class RetrievalResult(TypedDict):
     score: float
     source_ref: SourceRef
     metadata: dict[str, Any]
+    strategy: RetrievalStrategy
+    graph_path: GraphPath | None = None
 
 
-class DiagnosticResponse(TypedDict):
+class DiagnosticResponse(BaseModel):
     """Auditable response returned by the diagnostic agent."""
 
     failure_modes_identified: list[str]
     most_probable_root_cause: str
-    confidence: float
+    confidence: float = Field(ge=0.0, le=1.0)
     evidence: list[dict[str, Any]]
     recommended_actions: list[str]
     related_equipment: list[str]
     graph_path: str
+
+    @field_validator("failure_modes_identified", "recommended_actions")
+    @classmethod
+    def lists_must_not_be_empty(cls, value: list[str]) -> list[str]:
+        """Reject diagnostic responses without findings or actions."""
+        if not value:
+            msg = "list must not be empty"
+            raise ValueError(msg)
+        return value
 
 
 @runtime_checkable
@@ -131,7 +171,7 @@ class GraphStore(Protocol):
         start_node: str,
         end_node: str,
         max_depth: int = 3,
-    ) -> list[list[str]]:
+    ) -> list[GraphPath]:
         """Return matching graph paths between two nodes."""
         ...
 
@@ -188,7 +228,9 @@ __all__ = [
     "ExtractionResult",
     "GraphEdge",
     "GraphNode",
+    "GraphPath",
     "GraphStore",
     "RetrievalResult",
+    "RetrievalStrategy",
     "SourceRef",
 ]
