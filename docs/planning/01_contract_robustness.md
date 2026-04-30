@@ -8,25 +8,24 @@ Use este arquivo como lista unica de acompanhamento para a migracao dos contrato
 
 ### `exceptions.py`
 
-- [ ] 1. Criar `src/exceptions.py` completo.
-  - [ ] 1.1. Criar `NexusRCMError(Exception)` como classe base do projeto.
-  - [ ] 1.2. Adicionar atributo opcional `reason: str | None` para mensagem estruturada.
-  - [ ] 1.3. Criar `LoaderError(NexusRCMError)` com atributos `source: Path` e `reason: str`.
-  - [ ] 1.4. Montar automaticamente a mensagem de `LoaderError`: `Failed to load '{source}': {reason}`.
-  - [ ] 1.5. Criar `ExtractionError(NexusRCMError)` para falhas irrecuperaveis do pipeline NLP, como modelo nao carregado ou out of memory.
-  - [ ] 1.6. Garantir que `ExtractionError` nao seja usada para input de baixa qualidade.
-  - [ ] 1.7. Criar `GraphStoreError(NexusRCMError)` para falhas de operacoes no grafo, como no inexistente ou backend indisponivel.
-  - [ ] 1.8. Criar `VectorStoreError(NexusRCMError)` para falhas no vector store, como dimensoes inconsistentes ou backend indisponivel.
-  - [ ] 1.9. Criar `RetrievalError(NexusRCMError)` para busca completa sem evidencia relevante.
-  - [ ] 1.10. Criar `IngestionError(NexusRCMError)` como erro base para ingestao.
-  - [ ] 1.11. Criar `DiagnosticError(NexusRCMError)` como erro base para diagnostico.
-  - [ ] 1.12. Exportar todas as excecoes no `__all__` do arquivo.
+- [X] 1. Criar `src/nexusrcm/exceptions.py` completo.
+  - [X] 1.1. Criar `NexusRCMError(Exception)` como classe base do projeto.
+  - [X] 1.2. Adicionar atributo opcional `reason: str | None` para mensagem estruturada.
+  - [X] 1.3. Criar `LoaderError(NexusRCMError)` com atributos `source: Path` e `reason: str`.
+  - [X] 1.4. Montar automaticamente a mensagem de `LoaderError`: `Failed to load '{source}': {reason}`.
+  - [X] 1.5. Criar `ExtractionError(NexusRCMError)` para falhas irrecuperaveis do pipeline NLP, como modelo nao carregado ou out of memory.
+  - [X] 1.6. Garantir que `ExtractionError` nao seja usada para input de baixa qualidade.
+  - [X] 1.7. Criar `GraphStoreError(NexusRCMError)` para falhas de operacoes no grafo, como no inexistente ou backend indisponivel.
+  - [X] 1.8. Criar `VectorStoreError(NexusRCMError)` para falhas no vector store, como dimensoes inconsistentes ou backend indisponivel.
+  - [X] 1.9. Criar `RetrievalError(NexusRCMError)` para busca completa sem evidencia relevante.
+  - [X] 1.10. Criar `IngestionError(NexusRCMError)` como erro base para ingestão.
+  - [X] 1.11. Exportar todas as excecoes no `__all__` do arquivo.
 
-- [ ] 2. Escrever testes para as excecoes.
-  - [ ] 2.1. Garantir heranca correta de todas as excecoes.
-  - [ ] 2.2. Validar atributos estruturados, incluindo `reason` e `source`.
-  - [ ] 2.3. Validar a mensagem automatica de `LoaderError`.
-  - [ ] 2.4. Validar que as excecoes publicas estao exportadas em `__all__`.
+- [X] 2. Escrever testes para as excecoes.
+  - [X] 2.1. Garantir heranca correta de todas as excecoes.
+  - [X] 2.2. Validar atributos estruturados, incluindo `reason` e `source`.
+  - [X] 2.3. Validar a mensagem automatica de `LoaderError`.
+  - [X] 2.4. Validar que as excecoes publicas estao exportadas em `__all__`.
 
 ### `interfaces.py` - Modelos Pydantic
 
