@@ -111,35 +111,35 @@ Use este arquivo como lista unica de acompanhamento para a migracao dos contrato
 
 ### `interfaces.py` - Modulo Publico
 
-- [ ] 17. Adicionar `__contract_version__ = "0.1.0"`.
-  - [ ] 17.1. Posicionar logo apos os imports.
-  - [ ] 17.2. Alinhar com a versao semantica `v0.1.0` da Fase 1.
+- [X] 17. Adicionar `__contract_version__ = "0.1.0"`.
+  - [X] 17.1. Posicionar logo apos os imports.
+  - [X] 17.2. Alinhar com a versao semantica `v0.1.0` da Fase 1.
 
-- [ ] 18. Atualizar imports de excecoes.
-  - [ ] 18.1. Importar `LoaderError`.
-  - [ ] 18.2. Importar `ExtractionError`.
-  - [ ] 18.3. Importar `GraphStoreError`.
-  - [ ] 18.4. Importar `VectorStoreError`.
-  - [ ] 18.5. Importar `RetrievalError`.
-  - [ ] 18.6. Evitar importacao circular.
+- [X] 18. Atualizar imports de excecoes.
+  - [X] 18.1. Importar `LoaderError`.
+  - [X] 18.2. Importar `ExtractionError`.
+  - [X] 18.3. Importar `GraphStoreError`.
+  - [X] 18.4. Importar `VectorStoreError`.
+  - [X] 18.5. Importar `RetrievalError`.
+  - [X] 18.6. Evitar importacao circular.
 
-- [ ] 19. Atualizar `__all__`.
-  - [ ] 19.1. Incluir `GraphPath`.
-  - [ ] 19.2. Incluir `RetrievalStrategy`.
-  - [ ] 19.3. Incluir `__contract_version__`.
-  - [ ] 19.4. Manter os nomes dos tipos migrados de `TypedDict` para `BaseModel`.
-  - [ ] 19.5. Remover qualquer export obsoleto que referencie diretamente `TypedDict`.
+- [X] 19. Atualizar `__all__`.
+  - [X] 19.1. Incluir `GraphPath`.
+  - [X] 19.2. Incluir `RetrievalStrategy`.
+  - [X] 19.3. Incluir `__contract_version__`.
+  - [X] 19.4. Manter os nomes dos tipos migrados de `TypedDict` para `BaseModel`.
+  - [X] 19.5. Remover qualquer export obsoleto que referencie diretamente `TypedDict`.
 
 ### Verificacao
 
-- [ ] 20. Rodar `mypy --strict`.
-  - [ ] 20.1. Corrigir os erros novos que aparecerem.
-  - [ ] 20.2. Registrar separadamente qualquer erro legado que nao seja corrigido nesta rodada.
+- [X] 20. Rodar `mypy --strict`.
+  - [X] 20.1. Corrigir os erros novos que aparecerem.
+  - [X] 20.2. Registrar separadamente qualquer erro legado que nao seja corrigido nesta rodada.
 
-- [ ] 21. Rodar `pytest`.
-  - [ ] 21.1. Garantir que os testes novos passem.
-  - [ ] 21.2. Garantir que os testes existentes continuem passando.
-  - [ ] 21.3. Investigar regressao antes de marcar este item como concluido.
+- [X] 21. Rodar `pytest`.
+  - [X] 21.1. Garantir que os testes novos passem.
+  - [X] 21.2. Garantir que os testes existentes continuem passando.
+  - [X] 21.3. Investigar regressao antes de marcar este item como concluido.
 
 ## Escopo Opcional / Portfolio
 

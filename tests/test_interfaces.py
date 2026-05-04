@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import get_type_hints
 from uuid import UUID
 
+import nexusrcm.exceptions as exceptions
+import nexusrcm.interfaces as interfaces
 import pytest
 from nexusrcm.interfaces import (
     BaseExtractor,
@@ -18,14 +20,20 @@ from nexusrcm.interfaces import (
     DiagnosticAgent,
     DiagnosticResponse,
     DocumentChunk,
+    ExtractionError,
     ExtractionResult,
     GraphEdge,
     GraphNode,
     GraphPath,
     GraphStore,
+    GraphStoreError,
+    LoaderError,
+    RetrievalError,
     RetrievalResult,
     RetrievalStrategy,
     SourceRef,
+    VectorStoreError,
+    __contract_version__,
 )
 from pydantic import ValidationError
 
@@ -34,6 +42,51 @@ def build_source_ref() -> SourceRef:
     """Create a reusable source reference fixture."""
 
     return SourceRef(filename="manual.pdf", page=1, chunk_index=0)
+
+
+def test_contract_version_matches_phase_one_release() -> None:
+    """The interface module should expose the current contract version."""
+
+    assert __contract_version__ == "0.1.0"
+
+
+def test_interface_module_reexports_domain_exceptions() -> None:
+    """Contract consumers should import domain failures from the public module."""
+
+    assert LoaderError is exceptions.LoaderError
+    assert ExtractionError is exceptions.ExtractionError
+    assert GraphStoreError is exceptions.GraphStoreError
+    assert VectorStoreError is exceptions.VectorStoreError
+    assert RetrievalError is exceptions.RetrievalError
+
+
+def test_interface_public_api_exports_contract_symbols() -> None:
+    """The interface module should explicitly declare its stable public API."""
+
+    assert set(interfaces.__all__) == {
+        "__contract_version__",
+        "BaseExtractor",
+        "BaseLoader",
+        "BaseRetriever",
+        "BaseVectorStore",
+        "DiagnosticAgent",
+        "DiagnosticResponse",
+        "DocumentChunk",
+        "ExtractionError",
+        "ExtractionResult",
+        "GraphEdge",
+        "GraphNode",
+        "GraphPath",
+        "GraphStore",
+        "GraphStoreError",
+        "LoaderError",
+        "RetrievalError",
+        "RetrievalResult",
+        "RetrievalStrategy",
+        "SourceRef",
+        "VectorStoreError",
+    }
+    assert "TypedDict" not in interfaces.__all__
 
 
 class DummyLoader:

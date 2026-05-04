@@ -15,6 +15,16 @@ from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
 
+from nexusrcm.exceptions import (
+    ExtractionError,
+    GraphStoreError,
+    LoaderError,
+    RetrievalError,
+    VectorStoreError,
+)
+
+__contract_version__ = "0.1.0"
+
 
 class SourceRef(BaseModel):
     """Traceable reference to the original evidence source."""
@@ -311,6 +321,7 @@ class DiagnosticAgent(Protocol):
 
 
 __all__ = [
+    "__contract_version__",
     "BaseExtractor",
     "BaseLoader",
     "BaseRetriever",
@@ -318,12 +329,17 @@ __all__ = [
     "DiagnosticAgent",
     "DiagnosticResponse",
     "DocumentChunk",
+    "ExtractionError",
     "ExtractionResult",
     "GraphEdge",
     "GraphNode",
     "GraphPath",
     "GraphStore",
+    "GraphStoreError",
+    "LoaderError",
+    "RetrievalError",
     "RetrievalResult",
     "RetrievalStrategy",
     "SourceRef",
+    "VectorStoreError",
 ]
