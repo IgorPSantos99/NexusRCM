@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Iterator
+from inspect import iscoroutinefunction
 from pathlib import Path
+from typing import get_type_hints
 from uuid import UUID
 
 import pytest
@@ -35,8 +39,11 @@ def build_source_ref() -> SourceRef:
 class DummyLoader:
     """Minimal loader implementation for protocol validation."""
 
-    def load(self, source: Path) -> list[DocumentChunk]:
-        return [
+    supported_extensions: frozenset[str] = frozenset({".pdf"})
+    max_file_size_bytes: int = 50 * 1024 * 1024
+
+    def load(self, source: Path) -> Iterator[DocumentChunk]:
+        yield from [
             DocumentChunk(
                 chunk_id=source.stem,
                 text="bearing wear detected",
@@ -64,7 +71,7 @@ class DummyExtractor:
 class DummyGraphStore:
     """Minimal graph store implementation for protocol validation."""
 
-    def add_node(
+    async def add_node(
         self,
         node_type: str,
         node_id: str,
@@ -72,7 +79,7 @@ class DummyGraphStore:
     ) -> None:
         self._last_node = (node_type, node_id, attributes)
 
-    def add_edge(
+    async def add_edge(
         self,
         source: str,
         target: str,
@@ -81,7 +88,21 @@ class DummyGraphStore:
     ) -> None:
         self._last_edge = (source, target, relationship_type, attributes)
 
-    def get_neighbors(
+    async def has_node(self, node_id: str) -> bool:
+        return node_id == "pump:P-101A"
+
+    async def remove_node(self, node_id: str) -> None:
+        self._removed_node = node_id
+
+    async def remove_edge(
+        self,
+        source: str,
+        target: str,
+        relationship_type: str,
+    ) -> None:
+        self._removed_edge = (source, target, relationship_type)
+
+    async def get_neighbors(
         self,
         node_id: str,
         relationship_type: str | None = None,
@@ -94,7 +115,7 @@ class DummyGraphStore:
             )
         ]
 
-    def query_path(
+    async def query_path(
         self,
         start_node: str,
         end_node: str,
@@ -134,7 +155,7 @@ class DummyRetriever:
 class DummyVectorStore:
     """Minimal vector store implementation for protocol validation."""
 
-    def add(
+    async def add(
         self,
         ids: list[str],
         embeddings: list[list[float]],
@@ -142,7 +163,7 @@ class DummyVectorStore:
     ) -> None:
         self._items = list(zip(ids, embeddings, metadatas, strict=False))
 
-    def query(
+    async def query(
         self,
         embedding: list[float],
         top_k: int,
@@ -159,14 +180,14 @@ class DummyVectorStore:
             )
         ]
 
-    def delete(self, ids: list[str]) -> None:
+    async def delete(self, ids: list[str]) -> None:
         self._deleted = ids
 
 
 class DummyDiagnosticAgent:
     """Minimal agent implementation for protocol validation."""
 
-    def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse:
+    async def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse:
         return DiagnosticResponse(
             failure_modes_identified=["bearing wear"],
             most_probable_root_cause=question,
@@ -181,6 +202,9 @@ class DummyDiagnosticAgent:
 class IncompleteLoader:
     """Implementation missing the required loader contract."""
 
+    supported_extensions: frozenset[str] = frozenset({".pdf"})
+    max_file_size_bytes: int = 50 * 1024 * 1024
+
     def read(self, source: Path) -> list[DocumentChunk]:
         return []
 
@@ -191,16 +215,117 @@ def test_loader_contract_is_runtime_checkable() -> None:
     assert isinstance(DummyLoader(), BaseLoader)
 
 
+def test_loader_contract_exposes_supported_extensions_and_size_limit() -> None:
+    """A loader should declare supported file types and max accepted file size."""
+
+    loader = DummyLoader()
+
+    assert loader.supported_extensions == frozenset({".pdf"})
+    assert loader.max_file_size_bytes == 50 * 1024 * 1024
+
+
+def test_loader_contract_load_returns_iterator() -> None:
+    """Loader output should be consumable as a stream of document chunks."""
+
+    chunks = DummyLoader().load(Path("manual.pdf"))
+
+    assert isinstance(chunks, Iterator)
+    assert [chunk.text for chunk in chunks] == ["bearing wear detected"]
+
+
+def test_loader_contract_documents_empty_output_and_loader_errors() -> None:
+    """The BaseLoader docstring should document empty output and LoaderError."""
+
+    docstring = BaseLoader.load.__doc__
+
+    assert docstring is not None
+    assert "empty iterator" in docstring
+    assert "LoaderError" in docstring
+    assert "Raises:" in docstring
+
+
+def test_loader_contract_load_return_type_is_iterator() -> None:
+    """The public loader contract should return an iterator of document chunks."""
+
+    hints = get_type_hints(BaseLoader.load)
+
+    assert hints["return"] == Iterator[DocumentChunk]
+
+
 def test_extractor_contract_is_runtime_checkable() -> None:
     """An extractor implementation should satisfy the BaseExtractor protocol."""
 
     assert isinstance(DummyExtractor(), BaseExtractor)
 
 
+def test_extractor_contract_documents_empty_results_errors_and_idempotence() -> None:
+    """Extractor documentation should separate poor input from system failures."""
+
+    docstring = BaseExtractor.extract.__doc__
+
+    assert docstring is not None
+    assert "Low-quality input" in docstring
+    assert "empty lists" in docstring
+    assert "ExtractionError" in docstring
+    assert "idempotent" in docstring
+
+
 def test_graph_store_contract_is_runtime_checkable() -> None:
     """A graph backend should satisfy the GraphStore protocol."""
 
     assert isinstance(DummyGraphStore(), GraphStore)
+
+
+def test_graph_store_contract_exposes_async_backend_operations() -> None:
+    """Graph operations should be awaitable for persistent backend support."""
+
+    assert iscoroutinefunction(GraphStore.add_node)
+    assert iscoroutinefunction(GraphStore.add_edge)
+    assert iscoroutinefunction(GraphStore.has_node)
+    assert iscoroutinefunction(GraphStore.remove_node)
+    assert iscoroutinefunction(GraphStore.remove_edge)
+    assert iscoroutinefunction(GraphStore.get_neighbors)
+    assert iscoroutinefunction(GraphStore.query_path)
+
+
+def test_graph_store_contract_supports_node_and_edge_removal() -> None:
+    """A graph store should expose explicit node and edge deletion operations."""
+
+    store = DummyGraphStore()
+
+    assert asyncio.run(store.has_node("pump:P-101A"))
+    asyncio.run(store.remove_node("pump:P-101A"))
+    asyncio.run(
+        store.remove_edge(
+            "symptom:vibration",
+            "failure_mode:bearing_wear",
+            "indicates",
+        )
+    )
+
+    assert store._removed_node == "pump:P-101A"
+    assert store._removed_edge == (
+        "symptom:vibration",
+        "failure_mode:bearing_wear",
+        "indicates",
+    )
+
+
+def test_graph_store_contract_documents_connected_edge_removal() -> None:
+    """remove_node should define what happens to connected graph edges."""
+
+    docstring = GraphStore.remove_node.__doc__
+
+    assert docstring is not None
+    assert "connected edges" in docstring
+
+
+def test_graph_store_contract_query_path_return_type_is_graph_path_list() -> None:
+    """Graph traversal should return structured GraphPath objects."""
+
+    hints = get_type_hints(GraphStore.query_path)
+
+    assert hints["return"] == list[GraphPath]
 
 
 def test_retriever_contract_is_runtime_checkable() -> None:
@@ -215,10 +340,58 @@ def test_vector_store_contract_is_runtime_checkable() -> None:
     assert isinstance(DummyVectorStore(), BaseVectorStore)
 
 
+def test_vector_store_contract_exposes_async_backend_operations() -> None:
+    """Vector store operations should be awaitable for remote backend support."""
+
+    assert iscoroutinefunction(BaseVectorStore.add)
+    assert iscoroutinefunction(BaseVectorStore.query)
+    assert iscoroutinefunction(BaseVectorStore.delete)
+
+
+def test_vector_store_contract_documents_upsert_and_query_semantics() -> None:
+    """Vector store documentation should define add and query behavior."""
+
+    add_docstring = BaseVectorStore.add.__doc__
+    query_docstring = BaseVectorStore.query.__doc__
+
+    assert add_docstring is not None
+    assert query_docstring is not None
+    assert "upsert" in add_docstring
+    assert "VectorStoreError" in add_docstring
+    assert "score descending" in query_docstring
+    assert "fewer than top_k" in query_docstring
+
+
 def test_agent_contract_is_runtime_checkable() -> None:
     """An orchestration layer should satisfy the DiagnosticAgent protocol."""
 
     assert isinstance(DummyDiagnosticAgent(), DiagnosticAgent)
+
+
+def test_agent_contract_exposes_async_answer_operation() -> None:
+    """Agent answering should be awaitable because retrieval and LLM calls block."""
+
+    assert iscoroutinefunction(DiagnosticAgent.answer)
+
+
+def test_agent_contract_documents_retrieval_and_extraction_failures() -> None:
+    """Agent documentation should define its operational failure modes."""
+
+    docstring = DiagnosticAgent.answer.__doc__
+
+    assert docstring is not None
+    assert "RetrievalError" in docstring
+    assert "ExtractionError" in docstring
+    assert "structured output" in docstring
+
+
+def test_agent_contract_answer_returns_diagnostic_response() -> None:
+    """An async diagnostic agent should return the structured response model."""
+
+    response = asyncio.run(DummyDiagnosticAgent().answer("Why is P-101A vibrating?"))
+
+    assert response.failure_modes_identified == ["bearing wear"]
+    assert response.confidence == 0.91
 
 
 def test_incomplete_loader_does_not_satisfy_protocol() -> None:
