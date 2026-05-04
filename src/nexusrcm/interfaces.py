@@ -109,6 +109,13 @@ class RetrievalResult(BaseModel):
     graph_path: GraphPath | None = None
 
 
+class UsageMetrics(BaseModel):
+    """Optional telemetry captured while producing a diagnostic response."""
+
+    token_count: int | None = Field(default=None, ge=0)
+    latency_ms: float | None = Field(default=None, ge=0.0)
+
+
 class DiagnosticResponse(BaseModel):
     """Auditable response returned by the diagnostic agent."""
 
@@ -119,6 +126,7 @@ class DiagnosticResponse(BaseModel):
     recommended_actions: list[str]
     related_equipment: list[str]
     graph_path: str
+    usage_metrics: UsageMetrics | None = None
 
     @field_validator("failure_modes_identified", "recommended_actions")
     @classmethod
@@ -194,13 +202,13 @@ class BaseExtractor(Protocol):
 class GraphStore(Protocol):
     """Contract for graph persistence and traversal backends."""
 
-    async def add_node(
+    async def upsert_node(
         self,
         node_type: str,
         node_id: str,
         attributes: dict[str, Any],
     ) -> None:
-        """Insert or update a graph node."""
+        """Create or update a graph node using idempotent node_id semantics."""
         ...
 
     async def add_edge(
@@ -218,7 +226,7 @@ class GraphStore(Protocol):
         ...
 
     async def remove_node(self, node_id: str) -> None:
-        """Remove a graph node and all of its connected edges."""
+        """Remove a graph node and all connected edges as the node deletion API."""
         ...
 
     async def remove_edge(
@@ -341,5 +349,6 @@ __all__ = [
     "RetrievalResult",
     "RetrievalStrategy",
     "SourceRef",
+    "UsageMetrics",
     "VectorStoreError",
 ]

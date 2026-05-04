@@ -32,6 +32,7 @@ from nexusrcm.interfaces import (
     RetrievalResult,
     RetrievalStrategy,
     SourceRef,
+    UsageMetrics,
     VectorStoreError,
     __contract_version__,
 )
@@ -84,9 +85,36 @@ def test_interface_public_api_exports_contract_symbols() -> None:
         "RetrievalResult",
         "RetrievalStrategy",
         "SourceRef",
+        "UsageMetrics",
         "VectorStoreError",
     }
     assert "TypedDict" not in interfaces.__all__
+
+
+def test_usage_metrics_accepts_optional_telemetry() -> None:
+    """Telemetry should be optional because providers expose different metrics."""
+
+    empty_metrics = UsageMetrics()
+    populated_metrics = UsageMetrics(token_count=128, latency_ms=42.5)
+
+    assert empty_metrics.token_count is None
+    assert empty_metrics.latency_ms is None
+    assert populated_metrics.token_count == 128
+    assert populated_metrics.latency_ms == 42.5
+
+
+def test_usage_metrics_rejects_negative_token_count() -> None:
+    """Telemetry token counters should never be negative."""
+
+    with pytest.raises(ValidationError):
+        UsageMetrics(token_count=-1)
+
+
+def test_usage_metrics_rejects_negative_latency() -> None:
+    """Telemetry timings should never be negative."""
+
+    with pytest.raises(ValidationError):
+        UsageMetrics(latency_ms=-0.1)
 
 
 class DummyLoader:
@@ -124,7 +152,7 @@ class DummyExtractor:
 class DummyGraphStore:
     """Minimal graph store implementation for protocol validation."""
 
-    async def add_node(
+    async def upsert_node(
         self,
         node_type: str,
         node_id: str,
@@ -249,6 +277,7 @@ class DummyDiagnosticAgent:
             recommended_actions=["inspect bearing housing"],
             related_equipment=["P-101A"],
             graph_path=f"symptom -> failure_mode -> cause ({top_k})",
+            usage_metrics=UsageMetrics(token_count=32, latency_ms=12.5),
         )
 
 
@@ -332,7 +361,7 @@ def test_graph_store_contract_is_runtime_checkable() -> None:
 def test_graph_store_contract_exposes_async_backend_operations() -> None:
     """Graph operations should be awaitable for persistent backend support."""
 
-    assert iscoroutinefunction(GraphStore.add_node)
+    assert iscoroutinefunction(GraphStore.upsert_node)
     assert iscoroutinefunction(GraphStore.add_edge)
     assert iscoroutinefunction(GraphStore.has_node)
     assert iscoroutinefunction(GraphStore.remove_node)
@@ -379,6 +408,26 @@ def test_graph_store_contract_query_path_return_type_is_graph_path_list() -> Non
     hints = get_type_hints(GraphStore.query_path)
 
     assert hints["return"] == list[GraphPath]
+
+
+def test_graph_store_contract_documents_node_upsert_idempotency() -> None:
+    """The graph contract should name idempotent node writes explicitly."""
+
+    docstring = GraphStore.upsert_node.__doc__
+
+    assert docstring is not None
+    assert "idempotent" in docstring
+    assert "node_id" in docstring
+
+
+def test_graph_store_contract_uses_remove_node_as_delete_operation() -> None:
+    """Node deletion should have one clear public method in Phase 1."""
+
+    docstring = GraphStore.remove_node.__doc__
+
+    assert docstring is not None
+    assert "deletion" in docstring
+    assert not hasattr(GraphStore, "delete_node")
 
 
 def test_retriever_contract_is_runtime_checkable() -> None:
@@ -445,6 +494,7 @@ def test_agent_contract_answer_returns_diagnostic_response() -> None:
 
     assert response.failure_modes_identified == ["bearing wear"]
     assert response.confidence == 0.91
+    assert response.usage_metrics == UsageMetrics(token_count=32, latency_ms=12.5)
 
 
 def test_incomplete_loader_does_not_satisfy_protocol() -> None:
@@ -608,3 +658,30 @@ def test_diagnostic_response_rejects_empty_findings_or_actions(
             related_equipment=["P-101A"],
             graph_path="symptom -> failure_mode -> cause",
         )
+
+
+def test_diagnostic_response_supports_optional_usage_metrics() -> None:
+    """Diagnostic responses should carry telemetry when a provider exposes it."""
+
+    response = DiagnosticResponse(
+        failure_modes_identified=["bearing wear"],
+        most_probable_root_cause="poor lubrication",
+        confidence=0.8,
+        evidence=[{"source": "manual.pdf"}],
+        recommended_actions=["inspect bearing housing"],
+        related_equipment=["P-101A"],
+        graph_path="symptom -> failure_mode -> cause",
+        usage_metrics=UsageMetrics(token_count=256, latency_ms=80.0),
+    )
+    response_without_metrics = DiagnosticResponse(
+        failure_modes_identified=["bearing wear"],
+        most_probable_root_cause="poor lubrication",
+        confidence=0.8,
+        evidence=[{"source": "manual.pdf"}],
+        recommended_actions=["inspect bearing housing"],
+        related_equipment=["P-101A"],
+        graph_path="symptom -> failure_mode -> cause",
+    )
+
+    assert response.usage_metrics == UsageMetrics(token_count=256, latency_ms=80.0)
+    assert response_without_metrics.usage_metrics is None

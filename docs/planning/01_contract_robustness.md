@@ -143,17 +143,17 @@ Use este arquivo como lista unica de acompanhamento para a migracao dos contrato
 
 ## Escopo Opcional / Portfolio
 
-- [ ] 22. Adicionar contratos de telemetria.
-  - [ ] 22.1. Criar modelo `UsageMetrics`.
-  - [ ] 22.2. Adicionar contagem de tokens quando disponivel.
-  - [ ] 22.3. Adicionar latencia quando disponivel.
-  - [ ] 22.4. Adicionar `UsageMetrics` dentro de `DiagnosticResponse`.
-  - [ ] 22.5. Incluir `UsageMetrics` em `__all__` se implementado.
+- [X] 22. Adicionar contratos de telemetria.
+  - [X] 22.1. Criar modelo `UsageMetrics`.
+  - [X] 22.2. Adicionar contagem de tokens quando disponivel.
+  - [X] 22.3. Adicionar latencia quando disponivel.
+  - [X] 22.4. Adicionar `UsageMetrics` dentro de `DiagnosticResponse`.
+  - [X] 22.5. Incluir `UsageMetrics` em `__all__` se implementado.
 
-- [ ] 23. Atualizar contratos do grafo para idempotencia.
-  - [ ] 23.1. Avaliar troca de `add_node` por `upsert_node`.
-  - [ ] 23.2. Adicionar assinatura `delete_node` se ela for diferente de `remove_node`.
-  - [ ] 23.3. Marcar como TODO se a implementacao concreta ainda nao existir.
+- [X] 23. Atualizar contratos do grafo para idempotencia.
+  - [X] 23.1. Avaliar troca de `add_node` por `upsert_node`.
+  - [X] 23.2. Avaliar `delete_node`; nao adicionar assinatura separada porque ela nao difere de `remove_node` nesta fase.
+  - [X] 23.3. TODO: validar a semantica de idempotencia no primeiro backend concreto de grafo.
 
 ## Ordem Recomendada
 
