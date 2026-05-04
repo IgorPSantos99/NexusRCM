@@ -7,6 +7,7 @@ should depend only on these contracts.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from enum import StrEnum
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
@@ -121,25 +122,69 @@ class DiagnosticResponse(BaseModel):
 
 @runtime_checkable
 class BaseLoader(Protocol):
-    """Contract for document ingestion components."""
+    """Contract for document ingestion components.
 
-    def load(self, source: Path) -> list[DocumentChunk]:
-        """Load a source file into normalized document chunks."""
+    Loader implementations declare their accepted file extensions and maximum
+    file size so orchestration code can validate inputs before doing expensive
+    parsing work.
+    """
+
+    supported_extensions: frozenset[str]
+    max_file_size_bytes: int
+
+    def load(self, source: Path) -> Iterator[DocumentChunk]:
+        """Load a source file into normalized document chunks.
+
+        Returns an empty iterator when the source is valid but has no
+        extractable text.
+
+        Args:
+            source: Path to the source document.
+
+        Returns:
+            Iterator of normalized document chunks with source metadata.
+
+        Raises:
+            LoaderError: If the source is missing, corrupted, unsupported, or
+                cannot be parsed safely.
+        """
         ...
+
 
 @runtime_checkable
 class BaseExtractor(Protocol):
     """Contract for NLP extraction components."""
 
     def extract(self, chunk: DocumentChunk) -> ExtractionResult:
-        """Extract structured failure knowledge from a document chunk."""
+        """Extract structured failure knowledge from a document chunk.
+
+        Low-quality input, such as vague text or text without recognizable
+        reliability entities, returns a valid ExtractionResult with empty lists.
+        That absence of entities is normal data, not an exception.
+
+        Repeated calls with the same chunk should be idempotent: they should
+        produce equivalent extraction results when the extractor configuration
+        and model versions are unchanged.
+
+        Args:
+            chunk: Normalized document chunk to analyze.
+
+        Returns:
+            Structured extraction result. The entity lists may be empty.
+
+        Raises:
+            ExtractionError: If extraction fails irrecoverably, for example
+                because a model cannot be loaded or inference runs out of
+                memory.
+        """
         ...
+
 
 @runtime_checkable
 class GraphStore(Protocol):
     """Contract for graph persistence and traversal backends."""
 
-    def add_node(
+    async def add_node(
         self,
         node_type: str,
         node_id: str,
@@ -148,7 +193,7 @@ class GraphStore(Protocol):
         """Insert or update a graph node."""
         ...
 
-    def add_edge(
+    async def add_edge(
         self,
         source: str,
         target: str,
@@ -158,7 +203,24 @@ class GraphStore(Protocol):
         """Insert or update a graph edge."""
         ...
 
-    def get_neighbors(
+    async def has_node(self, node_id: str) -> bool:
+        """Return whether a node exists in the graph backend."""
+        ...
+
+    async def remove_node(self, node_id: str) -> None:
+        """Remove a graph node and all of its connected edges."""
+        ...
+
+    async def remove_edge(
+        self,
+        source: str,
+        target: str,
+        relationship_type: str,
+    ) -> None:
+        """Remove one relationship between two graph nodes."""
+        ...
+
+    async def get_neighbors(
         self,
         node_id: str,
         relationship_type: str | None = None,
@@ -166,7 +228,7 @@ class GraphStore(Protocol):
         """Return neighboring nodes for a given node."""
         ...
 
-    def query_path(
+    async def query_path(
         self,
         start_node: str,
         end_node: str,
@@ -174,6 +236,7 @@ class GraphStore(Protocol):
     ) -> list[GraphPath]:
         """Return matching graph paths between two nodes."""
         ...
+
 
 @runtime_checkable
 class BaseRetriever(Protocol):
@@ -183,39 +246,69 @@ class BaseRetriever(Protocol):
         """Return ranked evidence relevant to the user query."""
         ...
 
+
 @runtime_checkable
 class BaseVectorStore(Protocol):
     """Contract for pluggable vector database backends."""
 
-    def add(
+    async def add(
         self,
         ids: list[str],
         embeddings: list[list[float]],
         metadatas: list[dict[str, Any]],
     ) -> None:
-        """Persist embeddings and their metadata."""
+        """Persist embeddings and their metadata using upsert semantics.
+
+        If an id already exists, its embedding and metadata are overwritten.
+
+        Raises:
+            VectorStoreError: If ids, embeddings, and metadatas do not have
+                matching lengths, or if the backend rejects the write.
+        """
         ...
 
-    def query(
+    async def query(
         self,
         embedding: list[float],
         top_k: int,
         filters: dict[str, Any] | None = None,
     ) -> list[RetrievalResult]:
-        """Search similar vectors using an embedding query."""
+        """Search similar vectors using an embedding query.
+
+        Results are returned ordered by score descending. The backend may
+        return fewer than top_k results when the collection has fewer matching
+        records than requested.
+        """
         ...
 
-    def delete(self, ids: list[str]) -> None:
+    async def delete(self, ids: list[str]) -> None:
         """Delete embeddings by identifier."""
         ...
+
 
 @runtime_checkable
 class DiagnosticAgent(Protocol):
     """Contract for the orchestration layer that answers user questions."""
 
-    def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse:
-        """Generate an auditable diagnostic response for a user question."""
+    async def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse:
+        """Generate an auditable diagnostic response for a user question.
+
+        Args:
+            question: Natural-language diagnostic question.
+            top_k: Maximum number of retrieval results to use as evidence.
+
+        Returns:
+            Structured diagnostic response with evidence and recommended
+            actions.
+
+        Raises:
+            RetrievalError: If retrieval completes but finds no relevant
+                evidence for the question.
+            ExtractionError: If the LLM fails to produce valid structured output
+                after retries.
+        """
         ...
+
 
 __all__ = [
     "BaseExtractor",

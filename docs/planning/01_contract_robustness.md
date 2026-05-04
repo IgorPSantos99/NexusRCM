@@ -76,38 +76,38 @@ Use este arquivo como lista unica de acompanhamento para a migracao dos contrato
 
 ### `interfaces.py` - Protocols
 
-- [ ] 12. Atualizar `BaseLoader`.
-  - [ ] 12.1. Adicionar atributo de classe `supported_extensions: frozenset[str]`.
-  - [ ] 12.2. Adicionar atributo de classe `max_file_size_bytes: int`.
-  - [ ] 12.3. Alterar retorno de `load()` de `list[DocumentChunk]` para `Iterator[DocumentChunk]` ou `Generator[DocumentChunk, None, None]`.
-  - [ ] 12.4. Documentar que `load()` retorna lista ou iterador vazio quando nao ha texto extraivel.
-  - [ ] 12.5. Documentar que `load()` levanta `LoaderError` para arquivo ausente, corrompido ou nao suportado.
-  - [ ] 12.6. Adicionar docstring com secao `Raises: LoaderError`.
+- [X] 12. Atualizar `BaseLoader`.
+  - [X] 12.1. Adicionar atributo de classe `supported_extensions: frozenset[str]`.
+  - [X] 12.2. Adicionar atributo de classe `max_file_size_bytes: int`.
+  - [X] 12.3. Alterar retorno de `load()` de `list[DocumentChunk]` para `Iterator[DocumentChunk]` ou `Generator[DocumentChunk, None, None]`.
+  - [X] 12.4. Documentar que `load()` retorna lista ou iterador vazio quando nao ha texto extraivel.
+  - [X] 12.5. Documentar que `load()` levanta `LoaderError` para arquivo ausente, corrompido ou nao suportado.
+  - [X] 12.6. Adicionar docstring com secao `Raises: LoaderError`.
 
-- [ ] 13. Atualizar `BaseExtractor.extract`.
-  - [ ] 13.1. Documentar que input de baixa qualidade retorna listas vazias.
-  - [ ] 13.2. Documentar que falha irrecuperavel levanta `ExtractionError`.
-  - [ ] 13.3. Documentar idempotencia: chamadas repetidas com o mesmo chunk produzem resultado equivalente.
+- [X] 13. Atualizar `BaseExtractor.extract`.
+  - [X] 13.1. Documentar que input de baixa qualidade retorna listas vazias.
+  - [X] 13.2. Documentar que falha irrecuperavel levanta `ExtractionError`.
+  - [X] 13.3. Documentar idempotencia: chamadas repetidas com o mesmo chunk produzem resultado equivalente.
 
-- [ ] 14. Atualizar `GraphStore`.
-  - [ ] 14.1. Alterar `query_path` para retornar `list[GraphPath]`.
-  - [ ] 14.2. Adicionar `has_node(self, node_id: str) -> bool`.
-  - [ ] 14.3. Adicionar `remove_node(self, node_id: str) -> None`.
-  - [ ] 14.4. Documentar que `remove_node` remove todas as arestas conectadas.
-  - [ ] 14.5. Adicionar `remove_edge(self, source: str, target: str, relationship_type: str) -> None`.
-  - [ ] 14.6. Mudar assinaturas do `GraphStore` para `async` quando representarem chamadas a backend.
+- [X] 14. Atualizar `GraphStore`.
+  - [X] 14.1. Alterar `query_path` para retornar `list[GraphPath]`.
+  - [X] 14.2. Adicionar `has_node(self, node_id: str) -> bool`.
+  - [X] 14.3. Adicionar `remove_node(self, node_id: str) -> None`.
+  - [X] 14.4. Documentar que `remove_node` remove todas as arestas conectadas.
+  - [X] 14.5. Adicionar `remove_edge(self, source: str, target: str, relationship_type: str) -> None`.
+  - [X] 14.6. Mudar assinaturas do `GraphStore` para `async` quando representarem chamadas a backend.
 
-- [ ] 15. Atualizar `BaseVectorStore`.
-  - [ ] 15.1. Mudar assinaturas do `BaseVectorStore` para `async`.
-  - [ ] 15.2. Documentar semantica de upsert em `add`: id existente sobrescreve embedding e metadata.
-  - [ ] 15.3. Documentar que `add` levanta `VectorStoreError` se `ids` e `embeddings` tiverem comprimentos diferentes.
-  - [ ] 15.4. Documentar que `query` retorna resultados ordenados por score decrescente.
-  - [ ] 15.5. Documentar que `query` pode retornar menos que `top_k` se a colecao for menor.
+- [X] 15. Atualizar `BaseVectorStore`.
+  - [X] 15.1. Mudar assinaturas do `BaseVectorStore` para `async`.
+  - [X] 15.2. Documentar semantica de upsert em `add`: id existente sobrescreve embedding e metadata.
+  - [X] 15.3. Documentar que `add` levanta `VectorStoreError` se `ids` e `embeddings` tiverem comprimentos diferentes.
+  - [X] 15.4. Documentar que `query` retorna resultados ordenados por score decrescente.
+  - [X] 15.5. Documentar que `query` pode retornar menos que `top_k` se a colecao for menor.
 
-- [ ] 16. Atualizar `DiagnosticAgent.answer`.
-  - [ ] 16.1. Converter para `async def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse`.
-  - [ ] 16.2. Documentar que levanta `RetrievalError` se nenhuma evidencia for encontrada.
-  - [ ] 16.3. Documentar que levanta `ExtractionError` se o LLM falhar em produzir output estruturado valido apos retries.
+- [X] 16. Atualizar `DiagnosticAgent.answer`.
+  - [X] 16.1. Converter para `async def answer(self, question: str, top_k: int = 5) -> DiagnosticResponse`.
+  - [X] 16.2. Documentar que levanta `RetrievalError` se nenhuma evidencia for encontrada.
+  - [X] 16.3. Documentar que levanta `ExtractionError` se o LLM falhar em produzir output estruturado valido apos retries.
 
 ### `interfaces.py` - Modulo Publico
 
