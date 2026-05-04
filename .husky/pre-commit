@@ -2,13 +2,7 @@
 
 set -e
 
-PYTHON_BIN=".venv/Scripts/python.exe"
-
-if [ ! -x "$PYTHON_BIN" ]; then
-  echo "Missing project virtual environment at $PYTHON_BIN"
-  echo "Create it first and install dev dependencies before committing."
-  exit 1
-fi
+. "$(dirname "$0")/_/python-env"
 
 echo "Running ruff..."
 "$PYTHON_BIN" -m ruff check .

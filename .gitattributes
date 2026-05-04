@@ -1,0 +1,6 @@
+# Keep executable hook scripts portable across Windows, Linux, and macOS.
+.husky/* text eol=lf
+.husky/_/* text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+
