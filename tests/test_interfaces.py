@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterator
 from inspect import iscoroutinefunction
 from pathlib import Path
-from typing import get_type_hints
+from typing import ClassVar, get_type_hints
 from uuid import UUID
 
 import nexusrcm.exceptions as exceptions
@@ -20,6 +20,8 @@ from nexusrcm.interfaces import (
     DiagnosticAgent,
     DiagnosticResponse,
     DocumentChunk,
+    EvidenceRef,
+    EvidenceRelevance,
     ExtractionError,
     ExtractionResult,
     GraphEdge,
@@ -73,6 +75,8 @@ def test_interface_public_api_exports_contract_symbols() -> None:
         "DiagnosticAgent",
         "DiagnosticResponse",
         "DocumentChunk",
+        "EvidenceRef",
+        "EvidenceRelevance",
         "ExtractionError",
         "ExtractionResult",
         "GraphEdge",
@@ -117,11 +121,33 @@ def test_usage_metrics_rejects_negative_latency() -> None:
         UsageMetrics(latency_ms=-0.1)
 
 
+def test_evidence_ref_requires_auditable_source_and_relevance() -> None:
+    """Evidence should carry a source and calibrated relevance value."""
+
+    evidence = EvidenceRef(
+        source="SKF Bearing Manual p.34",
+        relevance=EvidenceRelevance.HIGH,
+        source_ref=build_source_ref(),
+    )
+
+    assert evidence.source == "SKF Bearing Manual p.34"
+    assert evidence.relevance is EvidenceRelevance.HIGH
+    assert evidence.source_ref == build_source_ref()
+    assert evidence.model_dump(mode="json")["relevance"] == "high"
+
+
+def test_evidence_ref_rejects_blank_source() -> None:
+    """Evidence without a readable source is not auditable."""
+
+    with pytest.raises(ValidationError):
+        EvidenceRef(source=" ", relevance=EvidenceRelevance.LOW)
+
+
 class DummyLoader:
     """Minimal loader implementation for protocol validation."""
 
-    supported_extensions: frozenset[str] = frozenset({".pdf"})
-    max_file_size_bytes: int = 50 * 1024 * 1024
+    supported_extensions: ClassVar[frozenset[str]] = frozenset({".pdf"})
+    max_file_size_bytes: ClassVar[int] = 50 * 1024 * 1024
 
     def load(self, source: Path) -> Iterator[DocumentChunk]:
         yield from [
@@ -220,7 +246,7 @@ class DummyGraphStore:
 class DummyRetriever:
     """Minimal retriever implementation for protocol validation."""
 
-    def retrieve(self, query: str, top_k: int = 5) -> list[RetrievalResult]:
+    async def retrieve(self, query: str, top_k: int = 5) -> list[RetrievalResult]:
         return [
             RetrievalResult(
                 result_id=f"result-{top_k}",
@@ -273,7 +299,9 @@ class DummyDiagnosticAgent:
             failure_modes_identified=["bearing wear"],
             most_probable_root_cause=question,
             confidence=0.91,
-            evidence=[{"source": "manual.pdf", "relevance": "high"}],
+            evidence=[
+                EvidenceRef(source="manual.pdf", relevance=EvidenceRelevance.HIGH)
+            ],
             recommended_actions=["inspect bearing housing"],
             related_equipment=["P-101A"],
             graph_path=f"symptom -> failure_mode -> cause ({top_k})",
@@ -284,8 +312,8 @@ class DummyDiagnosticAgent:
 class IncompleteLoader:
     """Implementation missing the required loader contract."""
 
-    supported_extensions: frozenset[str] = frozenset({".pdf"})
-    max_file_size_bytes: int = 50 * 1024 * 1024
+    supported_extensions: ClassVar[frozenset[str]] = frozenset({".pdf"})
+    max_file_size_bytes: ClassVar[int] = 50 * 1024 * 1024
 
     def read(self, source: Path) -> list[DocumentChunk]:
         return []
@@ -332,6 +360,15 @@ def test_loader_contract_load_return_type_is_iterator() -> None:
     hints = get_type_hints(BaseLoader.load)
 
     assert hints["return"] == Iterator[DocumentChunk]
+
+
+def test_loader_contract_declares_class_level_capabilities() -> None:
+    """Loader capabilities should be inspectable before loader instantiation."""
+
+    hints = get_type_hints(BaseLoader)
+
+    assert hints["supported_extensions"] == ClassVar[frozenset[str]]
+    assert hints["max_file_size_bytes"] == ClassVar[int]
 
 
 def test_extractor_contract_is_runtime_checkable() -> None:
@@ -436,6 +473,21 @@ def test_retriever_contract_is_runtime_checkable() -> None:
     assert isinstance(DummyRetriever(), BaseRetriever)
 
 
+def test_retriever_contract_exposes_async_retrieve_operation() -> None:
+    """Retrieval should be awaitable because it may combine remote backends."""
+
+    assert iscoroutinefunction(BaseRetriever.retrieve)
+
+
+def test_retriever_contract_returns_ranked_results() -> None:
+    """An async retriever should return retrieval result models."""
+
+    results = asyncio.run(DummyRetriever().retrieve("bearing wear", top_k=3))
+
+    assert results[0].result_id == "result-3"
+    assert results[0].strategy is RetrievalStrategy.SEMANTIC
+
+
 def test_vector_store_contract_is_runtime_checkable() -> None:
     """A vector backend should satisfy the BaseVectorStore protocol."""
 
@@ -526,6 +578,22 @@ def test_document_chunk_rejects_blank_text() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "source_ref_data",
+    [
+        {"filename": "manual.pdf", "page": 0},
+        {"filename": "manual.pdf", "chunk_index": -1},
+    ],
+)
+def test_source_ref_rejects_invalid_page_or_chunk_index(
+    source_ref_data: dict[str, object],
+) -> None:
+    """Source references should reject impossible page or chunk positions."""
+
+    with pytest.raises(ValidationError):
+        SourceRef.model_validate(source_ref_data)
+
+
 def test_extraction_result_defaults_to_empty_lists() -> None:
     """An empty extraction result should be valid and use independent lists."""
 
@@ -569,6 +637,13 @@ def test_graph_path_preserves_nodes_edges_and_depth() -> None:
     assert path.nodes == ["symptom:vibration", "failure_mode:bearing_wear"]
     assert path.edges == [edge]
     assert path.total_depth == 1
+
+
+def test_graph_path_rejects_negative_depth() -> None:
+    """Graph traversal depth cannot be negative."""
+
+    with pytest.raises(ValidationError):
+        GraphPath(nodes=["a"], edges=[], total_depth=-1)
 
 
 def test_retrieval_result_supports_semantic_strategy_without_graph_path() -> None:
@@ -628,7 +703,9 @@ def test_diagnostic_response_rejects_confidence_outside_unit_interval(
             failure_modes_identified=["bearing wear"],
             most_probable_root_cause="poor lubrication",
             confidence=confidence,
-            evidence=[{"source": "manual.pdf"}],
+            evidence=[
+                EvidenceRef(source="manual.pdf", relevance=EvidenceRelevance.HIGH)
+            ],
             recommended_actions=["inspect bearing housing"],
             related_equipment=["P-101A"],
             graph_path="symptom -> failure_mode -> cause",
@@ -653,7 +730,9 @@ def test_diagnostic_response_rejects_empty_findings_or_actions(
             failure_modes_identified=failure_modes_identified,
             most_probable_root_cause="poor lubrication",
             confidence=0.8,
-            evidence=[{"source": "manual.pdf"}],
+            evidence=[
+                EvidenceRef(source="manual.pdf", relevance=EvidenceRelevance.HIGH)
+            ],
             recommended_actions=recommended_actions,
             related_equipment=["P-101A"],
             graph_path="symptom -> failure_mode -> cause",
@@ -667,7 +746,7 @@ def test_diagnostic_response_supports_optional_usage_metrics() -> None:
         failure_modes_identified=["bearing wear"],
         most_probable_root_cause="poor lubrication",
         confidence=0.8,
-        evidence=[{"source": "manual.pdf"}],
+        evidence=[EvidenceRef(source="manual.pdf", relevance=EvidenceRelevance.HIGH)],
         recommended_actions=["inspect bearing housing"],
         related_equipment=["P-101A"],
         graph_path="symptom -> failure_mode -> cause",
@@ -677,7 +756,7 @@ def test_diagnostic_response_supports_optional_usage_metrics() -> None:
         failure_modes_identified=["bearing wear"],
         most_probable_root_cause="poor lubrication",
         confidence=0.8,
-        evidence=[{"source": "manual.pdf"}],
+        evidence=[EvidenceRef(source="manual.pdf", relevance=EvidenceRelevance.HIGH)],
         recommended_actions=["inspect bearing housing"],
         related_equipment=["P-101A"],
         graph_path="symptom -> failure_mode -> cause",
@@ -685,3 +764,20 @@ def test_diagnostic_response_supports_optional_usage_metrics() -> None:
 
     assert response.usage_metrics == UsageMetrics(token_count=256, latency_ms=80.0)
     assert response_without_metrics.usage_metrics is None
+
+
+def test_diagnostic_response_rejects_unstructured_evidence() -> None:
+    """Diagnostic evidence should be structured enough for audit."""
+
+    with pytest.raises(ValidationError):
+        DiagnosticResponse.model_validate(
+            {
+                "failure_modes_identified": ["bearing wear"],
+                "most_probable_root_cause": "poor lubrication",
+                "confidence": 0.8,
+                "evidence": [{"source": "manual.pdf"}],
+                "recommended_actions": ["inspect bearing housing"],
+                "related_equipment": ["P-101A"],
+                "graph_path": "symptom -> failure_mode -> cause",
+            }
+        )

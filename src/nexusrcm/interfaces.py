@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, ClassVar, Protocol, runtime_checkable
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
@@ -30,8 +30,8 @@ class SourceRef(BaseModel):
     """Traceable reference to the original evidence source."""
 
     filename: str
-    page: int | None = None
-    chunk_index: int | None = None
+    page: int | None = Field(default=None, ge=1)
+    chunk_index: int | None = Field(default=None, ge=0)
 
 
 class DocumentChunk(BaseModel):
@@ -86,7 +86,7 @@ class GraphPath(BaseModel):
 
     nodes: list[str]
     edges: list[GraphEdge]
-    total_depth: int
+    total_depth: int = Field(ge=0)
 
 
 class RetrievalStrategy(StrEnum):
@@ -95,6 +95,32 @@ class RetrievalStrategy(StrEnum):
     SEMANTIC = "semantic"
     STRUCTURAL = "structural"
     HYBRID = "hybrid"
+
+
+class EvidenceRelevance(StrEnum):
+    """Calibrated relevance label for diagnostic evidence."""
+
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+
+
+class EvidenceRef(BaseModel):
+    """Auditable reference to evidence used in a diagnostic response."""
+
+    source: str = Field(min_length=1)
+    relevance: EvidenceRelevance
+    source_ref: SourceRef | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    @field_validator("source")
+    @classmethod
+    def source_must_not_be_blank(cls, value: str) -> str:
+        """Reject evidence that cannot be traced to a readable source."""
+        if not value.strip():
+            msg = "source must not be empty or whitespace"
+            raise ValueError(msg)
+        return value
 
 
 class RetrievalResult(BaseModel):
@@ -122,7 +148,7 @@ class DiagnosticResponse(BaseModel):
     failure_modes_identified: list[str]
     most_probable_root_cause: str
     confidence: float = Field(ge=0.0, le=1.0)
-    evidence: list[dict[str, Any]]
+    evidence: list[EvidenceRef]
     recommended_actions: list[str]
     related_equipment: list[str]
     graph_path: str
@@ -147,8 +173,8 @@ class BaseLoader(Protocol):
     parsing work.
     """
 
-    supported_extensions: frozenset[str]
-    max_file_size_bytes: int
+    supported_extensions: ClassVar[frozenset[str]]
+    max_file_size_bytes: ClassVar[int]
 
     def load(self, source: Path) -> Iterator[DocumentChunk]:
         """Load a source file into normalized document chunks.
@@ -260,7 +286,7 @@ class GraphStore(Protocol):
 class BaseRetriever(Protocol):
     """Contract for retrieval strategies over text, graph, or both."""
 
-    def retrieve(self, query: str, top_k: int = 5) -> list[RetrievalResult]:
+    async def retrieve(self, query: str, top_k: int = 5) -> list[RetrievalResult]:
         """Return ranked evidence relevant to the user query."""
         ...
 
@@ -337,6 +363,8 @@ __all__ = [
     "DiagnosticAgent",
     "DiagnosticResponse",
     "DocumentChunk",
+    "EvidenceRef",
+    "EvidenceRelevance",
     "ExtractionError",
     "ExtractionResult",
     "GraphEdge",

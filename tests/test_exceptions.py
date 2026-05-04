@@ -33,6 +33,13 @@ def test_public_exceptions_are_exported() -> None:
     }
 
 
+def test_exceptions_module_has_module_docstring() -> None:
+    """The exceptions module should describe its public purpose."""
+
+    assert exceptions.__doc__ is not None
+    assert "Domain exceptions" in exceptions.__doc__
+
+
 def test_exception_hierarchy_groups_domain_failures() -> None:
     """Specialized failures should share the common NexusRCM base type."""
 
